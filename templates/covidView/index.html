@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Covid View</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.4/css/materialize.min.css">
+        <link rel="stylesheet" href="{% static 'css/reset.css' %}">
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <script>
+            const decide = {{ decide|safe }};
+            const death = {{ death|safe }};
+            const totalFirstCntPercent = {{ totalFirstCntPercent|safe }};
+            const totalSecondCntPercent = {{ totalSecondCntPercent|safe }};
+            const totalThirdCntPercent = {{ totalThirdCntPercent|safe }};
+            const baseDate = {{ baseDate|safe }};
+            const today = {{ today|safe }};
+        </script>
+        <script defer src="{% static 'js/script.js' %}"></script>
+    </head>
+    <body>
+        <div class="container">
+            <header class="main">
+                <h1>
+                    Covid View
+                </h1>
+            </header>
+            <div class="main">
+                <h2>
+                    {{ today.month }}월 {{ today.day }}일
+                </h2>
+                <div class="figure_wrapper">
+                    <div class="decide_wrapper figure">
+                        <h3>
+                            확진자
+                        </h3>
+                        <p class="decide">
+                            {{ today.decide }}
+                        </p>
+                        <p class="delta">
+                            어제보다 
+                            <span id="decideDelta">
+                                <svg id="decideUp" class="up" version="1.1" viewBox="0 0 512 512" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M413.1,327.3l-1.8-2.1l-136-156.5c-4.6-5.3-11.5-8.6-19.2-8.6c-7.7,0-14.6,3.4-19.2,8.6L101,324.9l-2.3,2.6  C97,330,96,333,96,336.2c0,8.7,7.4,15.8,16.6,15.8v0h286.8v0c9.2,0,16.6-7.1,16.6-15.8C416,332.9,414.9,329.8,413.1,327.3z"/></svg>
+                                <svg id="decideDown" class="down" version="1.1" viewBox="0 0 512 512" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M98.9,184.7l1.8,2.1l136,156.5c4.6,5.3,11.5,8.6,19.2,8.6c7.7,0,14.6-3.4,19.2-8.6L411,187.1l2.3-2.6  c1.7-2.5,2.7-5.5,2.7-8.7c0-8.7-7.4-15.8-16.6-15.8v0H112.6v0c-9.2,0-16.6,7.1-16.6,15.8C96,179.1,97.1,182.2,98.9,184.7z"/></svg>
+                                {{ today.decideDelta }}
+                            </span>
+                        </p>
+                    </div>
+                        <div class="death_wrapper figure">
+                        <h3>
+                            사망자
+                        </h3>
+                        <p class="death">
+                            {{ today.death }}
+                        </p>
+                        <p>
+                            어제보다 
+                            <span id="deathDelta">
+                                <svg id="deathUp" class="up" version="1.1" viewBox="0 0 512 512" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M413.1,327.3l-1.8-2.1l-136-156.5c-4.6-5.3-11.5-8.6-19.2-8.6c-7.7,0-14.6,3.4-19.2,8.6L101,324.9l-2.3,2.6  C97,330,96,333,96,336.2c0,8.7,7.4,15.8,16.6,15.8v0h286.8v0c9.2,0,16.6-7.1,16.6-15.8C416,332.9,414.9,329.8,413.1,327.3z"/></svg>
+                                <svg id="deathDown" class="down" version="1.1" viewBox="0 0 512 512" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M98.9,184.7l1.8,2.1l136,156.5c4.6,5.3,11.5,8.6,19.2,8.6c7.7,0,14.6-3.4,19.2-8.6L411,187.1l2.3-2.6  c1.7-2.5,2.7-5.5,2.7-8.7c0-8.7-7.4-15.8-16.6-15.8v0H112.6v0c-9.2,0-16.6,7.1-16.6,15.8C96,179.1,97.1,182.2,98.9,184.7z"/></svg>
+                                {{ today.deathDelta }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="main infection_chart">
+                <div class="radio">
+                    <label>
+                        <input type="radio" class="with-gap" name="infection_duration" value=7 onclick="setInfection(this.value)" checked />
+                        <span>1주</span>
+                    </label>
+                    <label>
+                        <input type="radio" class="with-gap" name="infection_duration" value=31 onclick="setInfection(this.value)" />
+                        <span>1달</span>
+                    </label>
+                    <label>
+                        <input type="radio" class="with-gap" name="infection_duration" value=365 onclick="setInfection(this.value)" />
+                        <span>1년</span>
+                    </label>
+                </div>
+                <canvas id="infectionChart"></canvas>
+            </div>
+            <div class="main vaccination_chart">
+                <div class="radio">
+                    <label>
+                        <input type="radio" class="with-gap" name="vaccination_duration" value=7 onclick="setVaccination(this.value)" checked />
+                        <span>1주</span>
+                    </label>
+                    <label>
+                        <input type="radio" class="with-gap" name="vaccination_duration" value=31 onclick="setVaccination(this.value)" />
+                        <span>1달</span>
+                    </label>
+                    <label>
+                        <input type="radio" class="with-gap" name="vaccination_duration" value=365 onclick="setVaccination(this.value)" />
+                        <span>1년</span>
+                    </label>
+                </div>
+                <canvas id="vaccinationChart"></canvas>
+            </div>
+        </div>
+    </body>
+</html>
