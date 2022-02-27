@@ -21,7 +21,7 @@ body {
 
 /* TEXT */
 
-p, h1, h2, h3, label{
+p, h1, h2, h3, label, a{
     font-family: Roboto;
     font-style: normal;
     font-weight: normal;
@@ -110,6 +110,11 @@ input[type="radio"]:not(:checked)+span, input[type="radio"]:checked+span {
 
 [type="radio"]:checked+span:after, [type="radio"].with-gap:checked+span:after {
     background-color: rgb(132, 99, 255);
+}
+
+footer {
+    padding: 10px;
+    background-color: #E5E5E5;
 }
 
 
