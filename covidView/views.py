@@ -17,10 +17,11 @@ def index(request):
     
     infectionData = getInfectionData(infectionStart, end)
     vaccinationData = getVaccinationData(vaccinationStart)
+    sidoData = {'sido': getSidoData(end)}
     today = {
         'today': {
-            'month': list(vaccinationData['baseDate'].values())[-1][3:5],
-            'day': list(vaccinationData['baseDate'].values())[-1][6:8],
+            'month': list(infectionData['stateDt'].values())[-1][3:5],
+            'day': list(infectionData['stateDt'].values())[-1][6:8],
             'decide': insertComma(list(infectionData['decide'].values())[-1]),
             'death': insertComma(list(infectionData['death'].values())[-1]),
             'decideDelta': insertComma(list(infectionData['decide'].values())[-1]
@@ -35,6 +36,7 @@ def index(request):
     context = {}
     context.update(infectionData)
     context.update(vaccinationData)
+    context.update(sidoData)
     context.update(today)
     
     # print(context)
@@ -56,39 +58,27 @@ def getInfectionData(start, end):
     context = xmltodict.parse(context)
     context = dict(context)
     
-    stateDt = []
     decideCnt = []
     deathCnt = []
-    
+    stateDt = []
+        
     for day in context['response']['body']['items']['item']:
-        stateDt.append(day['stateDt'])
         decideCnt.append(int(day['decideCnt']))
         deathCnt.append(int(day['deathCnt']))
+        stateDt.append(dateFormat(day['stateDt']))
     
-    df = pd.DataFrame({'stateDt': stateDt,
-                       'decideCnt': decideCnt,
-                       'deathCnt': deathCnt})
+    df = pd.DataFrame({'decideCnt': decideCnt,
+                       'deathCnt': deathCnt,
+                       'stateDt': stateDt})
     
+    df['stateDt'] = df['stateDt'].shift(-1)
     df['decide'] = df['decideCnt'].diff().shift(-1) * -1
     df['death'] = df['deathCnt'].diff().shift(-1) * -1
-    
-    # df['stateDt'] = df['stateDt'].shift(-1)
-    
+        
     df.dropna(inplace=True)
-    
-    # df['year'] = [stateDt[:4] for stateDt in df['stateDt']]
-    # df['month'] = [stateDt[4:6] for stateDt in df['stateDt']]
-    # df['day'] = [stateDt[6:] for stateDt in df['stateDt']]
-    
-    # df['monthDay'] = df['month']+'.'+df['day']
     
     df['decide'] = df['decide'].map(int)
     df['death'] = df['death'].map(int)
-    
-    # df['decideComma'] = df['decide'].map(insertComma)
-    # df['decideCntComma'] = df['decideCnt'].map(insertComma)
-    # df['deathComma'] = df['death'].map(insertComma)
-    # df['deathCntComma'] = df['deathCnt'].map(insertComma)
     
     df = df.iloc[::-1]
     
@@ -135,7 +125,41 @@ def getVaccinationData(start):
     data = df.to_dict()
     
     return data
+
+def getSidoData(today):
     
+    url = 'http://openapi.data.go.kr/openapi/service/rest/Covid19/getCovid19SidoInfStateJson'
+    params ={'serviceKey' : '8RgHCSdnXNPmYLpfqVEETc7qcRK7bxG6DD6yHD5jRm+HZclS/fON9Z195iwKgIbLv2YQRVS+82A/HZk+EPlDMA==',
+             'pageNo' : '1',
+             'numOfRows' : '100',
+             'startCreateDt' : today,
+             'endCreateDt' : today }
+
+    response = requests.get(url, params=params)
+    context = response.content
+    
+    context = xmltodict.parse(context)
+    context = dict(context)
+    
+    data = {}
+    
+    for day in context['response']['body']['items']['item']:
+        incDec = int(day['incDec'])
+        try:
+            qurRate = int(day['qurRate'])
+        except:
+            qurRate = day['qurRate']
+        
+        data[day['gubun']] = {'incDec': incDec,
+                              'qurRate': qurRate}
+    
+    # print(data)
+    
+    return data
+
+def dateFormat(date):
+    return date[2:4] + '-' + date[4:6] + '-' + date[6:8]
+
 def insertComma(number):
     return ("{:,}".format(number))
 
